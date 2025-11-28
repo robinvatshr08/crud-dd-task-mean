@@ -1,37 +1,40 @@
-const express = require("express");
-//const cors = require("cors");
+require('dotenv').config(); // Load .env file
+const express = require('express');
+const mongoose = require('mongoose');
+// const cors = require('cors'); // uncomment if you need CORS
 
 const app = express();
 
-// parse requests of content-type - application/json
-app.use(express.json());
+// Middleware
+app.use(express.json()); // parse application/json
+app.use(express.urlencoded({ extended: true })); // parse application/x-www-form-urlencoded
+// app.use(cors()); // uncomment if needed
 
-// parse requests of content-type - application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: true }));
+// MongoDB connection
+const uri = process.env.MONGO_URI;
 
-const db = require("./app/models");
-db.mongoose
-  .connect(db.url, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
+mongoose.set('strictQuery', false); // optional to suppress Mongoose deprecation warning
+
+mongoose
+  .connect(uri)
   .then(() => {
-    console.log("Connected to the database!");
+    console.log('Connected to the database!');
   })
   .catch(err => {
-    console.log("Cannot connect to the database!", err);
-    process.exit();
+    console.error('Cannot connect to the database!', err);
+    process.exit(1); // Exit process if DB connection fails
   });
 
-// simple route
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to Test application." });
+// Simple route
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to Test application.' });
 });
 
-require("./app/routes/turorial.routes")(app);
+// Load other routes
+require('./app/routes/turorial.routes')(app); // make sure this path is correct
 
-// set port, listen for requests
-const PORT = process.env.PORT || 8080;
+// Start server
+const PORT = process.env.BACKEND_PORT || 8080; // Use BACKEND_PORT from .env
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
